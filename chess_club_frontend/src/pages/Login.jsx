@@ -1,6 +1,7 @@
 // src/pages/Login.jsx
 import { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -9,6 +10,7 @@ function Login() {
   });
 
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -22,19 +24,25 @@ function Login() {
 
     try {
       const res = await axios.post('http://localhost:3001/login', formData);
-      setMessage(res.data.message + ' (Role: ' + res.data.role + ')');
-      // You can redirect based on role here if needed
+
+      // Store user info locally
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+
+      setMessage('✅ ' + res.data.message + ' (Role: ' + res.data.user.role + ')');
+
+      // Optional: redirect to homepage or dashboard
+      setTimeout(() => navigate('/'), 1000);
     } catch (err) {
       if (err.response) {
-        setMessage(err.response.data.message);
+        setMessage('❌ ' + err.response.data.message);
       } else {
-        setMessage('Server error');
+        setMessage('❌ Server error');
       }
     }
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: '400px', margin: 'auto', padding: '2rem' }}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
         <input
@@ -43,17 +51,19 @@ function Login() {
           placeholder="Username"
           value={formData.username}
           onChange={handleChange}
-        />
+          required
+        /><br /><br />
         <input
           name="password"
           type="password"
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}
-        />
+          required
+        /><br /><br />
         <button type="submit">Login</button>
       </form>
-      <p>{message}</p>
+      {message && <p>{message}</p>}
     </div>
   );
 }

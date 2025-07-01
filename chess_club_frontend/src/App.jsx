@@ -1,20 +1,20 @@
-// import Register from './pages/Register';
-
-// export default
-//   function App() {
-//   return (
-//     <div>
-//       <Register />
-//     </div>
-//   );
-// }
-
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import Layout from './components/Layout.jsx';
 
-export default function App() {
+function App() {
   return (
-    <div>
-      <Login />
-    </div>
+    <BrowserRouter>
+      <Layout />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
+
+export default App;
