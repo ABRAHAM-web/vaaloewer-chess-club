@@ -1,17 +1,21 @@
+// src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Home from './pages/Home';
-import Layout from './components/Layout.jsx';
+import DashboardAdmin from './pages/DashboardAdmin';
 
 function App() {
   return (
     <BrowserRouter>
-      <Layout />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route path="admin" element={<DashboardAdmin />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
