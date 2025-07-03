@@ -7,18 +7,19 @@ function AddGameForm() {
   const [formData, setFormData] = useState({
     player1: '',
     player2: '',
-    result: 'draw',
+    result: '½-½',
   });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Fetch list of players from backend
     axios.get('http://localhost:3001/admin/players')
       .then((res) => {
+        console.log('✅ Players loaded:', res.data);
         setPlayers(res.data);
       })
       .catch((err) => {
-        console.error('Error fetching players:', err);
+        console.error('⚠️ Error fetching players:', err);
+        setMessage('⚠️ Failed to load players');
       });
   }, []);
 
@@ -38,37 +39,80 @@ function AddGameForm() {
     }
 
     try {
-      const res = await axios.post('http://localhost:3001/admin/add-game', formData);
+      const res = await axios.post('http://localhost:3001/admin/games', {
+        white_player_id: Number(formData.player1),
+        black_player_id: Number(formData.player2),
+        result: formData.result,
+      });
+
+      console.log('✅ Game saved:', res.data);
       setMessage('✅ Game added successfully!');
     } catch (err) {
-      console.error(err);
-      setMessage('❌ Failed to add game');
+      if (err.response) {
+        console.error('❌ Server responded with error:', err.response.data);
+        setMessage(`❌ ${err.response.data.message} - ${err.response.data.error || ''}`);
+      } else {
+        console.error('❌ Request failed:', err.message);
+        setMessage('❌ Failed to connect to server');
+      }
     }
   };
 
   return (
-    <div style={{ background: '#f0f0f0', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
+    <div style={{
+      background: '#f0f0f0',
+      padding: '1rem',
+      borderRadius: '8px',
+      marginBottom: '2rem'
+    }}>
       <h3>Add New Game</h3>
       <form onSubmit={handleSubmit}>
-        <select name="player1" value={formData.player1} onChange={handleChange} required>
+        <label>Player 1 (White):</label>
+        <select
+          name="player1"
+          value={formData.player1}
+          onChange={handleChange}
+          required
+        >
           <option value="">Select Player 1</option>
-          {players.map(p => <option key={p.id} value={p.id}>{p.username}</option>)}
+          {players.map(p => (
+            <option key={p.id} value={p.id}>{p.username}</option>
+          ))}
         </select>
+
         {' '}vs{' '}
-        <select name="player2" value={formData.player2} onChange={handleChange} required>
+
+        <label>Player 2 (Black):</label>
+        <select
+          name="player2"
+          value={formData.player2}
+          onChange={handleChange}
+          required
+        >
           <option value="">Select Player 2</option>
-          {players.map(p => <option key={p.id} value={p.id}>{p.username}</option>)}
+          {players.map(p => (
+            <option key={p.id} value={p.id}>{p.username}</option>
+          ))}
         </select>
+
         <br /><br />
+
         <label>Result: </label>
-        <select name="result" value={formData.result} onChange={handleChange}>
-          <option value="player1">Player 1 Wins</option>
-          <option value="player2">Player 2 Wins</option>
-          <option value="draw">Draw</option>
+        <select
+          name="result"
+          value={formData.result}
+          onChange={handleChange}
+        >
+          <option value="1-0">Player 1 Wins</option>
+          <option value="0-1">Player 2 Wins</option>
+          <option value="½-½">Draw</option>
         </select>
+
         <br /><br />
+
         <button type="submit">Add Game</button>
       </form>
+
       {message && <p>{message}</p>}
     </div>
   );

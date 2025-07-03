@@ -25,7 +25,7 @@ app.get('/health', async (req, res) => {
     }
 });
 
-// GET all players (using your users table)
+// GET all players (now using users table)
 app.get('/admin/players', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT id, username FROM users');
@@ -36,7 +36,7 @@ app.get('/admin/players', async (req, res) => {
     }
 });
 
-// POST add new game
+// POST to add a new game
 app.post('/admin/games', async (req, res) => {
     const { white_player_id, black_player_id, result } = req.body;
 
@@ -44,7 +44,7 @@ app.post('/admin/games', async (req, res) => {
         return res.status(400).json({ message: 'Missing game data' });
     }
 
-    // Validate ENUM
+    // Validate that result is valid enum
     const allowedResults = ['1-0', '0-1', '½-½'];
     if (!allowedResults.includes(result)) {
         return res.status(400).json({ message: 'Invalid result format' });
@@ -64,7 +64,6 @@ app.post('/admin/games', async (req, res) => {
     }
 });
 
-// GET all games for admin dashboard
 app.get('/admin/games', async (req, res) => {
     try {
         const [rows] = await db.query(`
@@ -85,33 +84,6 @@ app.get('/admin/games', async (req, res) => {
     }
 });
 
-app.get('/players/standings', async (req, res) => {
-  try {
-    const sql = `
-      SELECT 
-        u.id, 
-        u.username,
-        COALESCE(SUM(
-          CASE 
-            WHEN g.result = '1-0' AND g.white_player_id = u.id THEN 1
-            WHEN g.result = '0-1' AND g.black_player_id = u.id THEN 1
-            ELSE 0
-          END
-        ),0) AS points
-      FROM users u
-      LEFT JOIN games g ON u.id = g.white_player_id OR u.id = g.black_player_id
-      WHERE u.role = 'player'
-      GROUP BY u.id
-      ORDER BY points DESC, u.username ASC
-    `;
-
-    const [results] = await db.query(sql);  // <-- async/await
-    res.json(results);
-  } catch (err) {
-    console.error('❌ Error fetching standings:', err);
-    res.status(500).json({ message: 'DB error', error: err });
-  }
-});
 
 
 
