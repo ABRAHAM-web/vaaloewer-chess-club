@@ -5,13 +5,10 @@ import axios from 'axios';
 function Register() {
   const [formData, setFormData] = useState({
     username: '',
-    password: '',
-    role: 'player' // default role
+    password: ''
   });
-
   const [message, setMessage] = useState('');
 
-  // Update form values
   const handleChange = (e) => {
     setFormData(prev => ({
       ...prev,
@@ -19,56 +16,51 @@ function Register() {
     }));
   };
 
-  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("🚀 Submitting:", formData);  // DEBUG LINE
 
     try {
-      const response = await axios.post('http://localhost:3001/register', formData);
-      setMessage('✅ Registration successful!');
-      setFormData({ username: '', password: '', role: 'player' }); // Clear form
+      const res = await axios.post('http://localhost:3001/register', {
+        username: formData.username,
+        password: formData.password
+      });
+      console.log('✅ Registered:', res.data);
+      setMessage('✅ Registration successful! You can now log in.');
+      setFormData({ username: '', password: '' });
     } catch (err) {
-      if (err.response?.status === 409) {
-        setMessage('⚠️ Username already exists.');
+      if (err.response) {
+        console.error('❌ Registration error:', err.response.data);
+        setMessage(`❌ ${err.response.data.message}`);
       } else {
-        setMessage('❌ Registration failed. Please try again.');
+        console.error('❌ Connection error:', err.message);
+        setMessage('❌ Failed to connect to server');
       }
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '1rem' }}>
+    <div style={{ padding: '2rem' }}>
       <h2>Register</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
+        <input 
+          type="text" 
+          name="username" 
           value={formData.username}
           onChange={handleChange}
+          placeholder="Username"
           required
-        /><br />
-
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
+        /><br /><br />
+        <input 
+          type="password" 
+          name="password" 
           value={formData.password}
           onChange={handleChange}
+          placeholder="Password"
           required
-        /><br />
-
-        <label>
-          Role:
-          <select name="role" value={formData.role} onChange={handleChange}>
-            <option value="player">Player</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label><br /><br />
-
+        /><br /><br />
         <button type="submit">Register</button>
       </form>
-
       {message && <p>{message}</p>}
     </div>
   );

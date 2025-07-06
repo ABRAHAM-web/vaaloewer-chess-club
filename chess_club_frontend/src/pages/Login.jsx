@@ -1,14 +1,9 @@
-// src/pages/Login.jsx
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
-
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
@@ -21,44 +16,50 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🚀 Logging in with:', formData);
 
     try {
       const res = await axios.post('http://localhost:3001/login', formData);
-
-      // Store user info locally
+      console.log('✅ Login success:', res.data);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      setMessage(`✅ Welcome, ${res.data.user.username}!`);
 
-      setMessage('✅ ' + res.data.message + ' (Role: ' + res.data.user.role + ')');
+      // 🚀 Redirect based on role
+    if (res.data.user.role === 'admin') {
+      window.location.href = '/admin';
+    } else {
+      window.location.href = '/player-dashboard';
+    }
 
-      // Optional: redirect to homepage or dashboard
-      setTimeout(() => navigate('/'), 1000);
     } catch (err) {
       if (err.response) {
-        setMessage('❌ ' + err.response.data.message);
+        console.error('❌ Login error:', err.response.data);
+        setMessage(`❌ ${err.response.data.message}`);
       } else {
-        setMessage('❌ Server error');
+        console.error('❌ Connection error:', err.message);
+        setMessage('❌ Failed to connect to server');
       }
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '2rem' }}>
+    <div style={{ padding: '2rem' }}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          name="username"
-          type="text"
-          placeholder="Username"
+        <input 
+          type="text" 
+          name="username" 
           value={formData.username}
           onChange={handleChange}
+          placeholder="Username"
           required
         /><br /><br />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
+        <input 
+          type="password" 
+          name="password" 
           value={formData.password}
           onChange={handleChange}
+          placeholder="Password"
           required
         /><br /><br />
         <button type="submit">Login</button>
