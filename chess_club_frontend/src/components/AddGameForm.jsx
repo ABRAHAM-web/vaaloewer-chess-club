@@ -4,22 +4,19 @@ import axios from 'axios';
 function AddGameForm({ onGameAdded }) {
   const [players, setPlayers] = useState([]);
   const [formData, setFormData] = useState({
-    player1: '',
-    player2: '',
-    result: '1-0'
+    white_player_id: '',
+    black_player_id: '',
+    result: '1-0',
   });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     axios.get('http://localhost:3001/admin/players')
-      .then((res) => {
+      .then(res => {
         console.log('✅ Players loaded:', res.data);
         setPlayers(res.data);
       })
-      .catch((err) => {
-        console.error('⚠️ Error fetching players:', err);
-        setMessage('⚠️ Could not load players');
-      });
+      .catch(err => console.error('⚠️ Error fetching players:', err));
   }, []);
 
   const handleChange = (e) => {
@@ -32,23 +29,26 @@ function AddGameForm({ onGameAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.player1 === formData.player2) {
+    if (formData.white_player_id === formData.black_player_id) {
       setMessage('⚠️ Players must be different');
       return;
     }
 
     try {
-      await axios.post('http://localhost:3001/admin/games', {
-        white_player_id: formData.player1,
-        black_player_id: formData.player2,
+      const payload = {
+        white_player_id: parseInt(formData.white_player_id),
+        black_player_id: parseInt(formData.black_player_id),
         result: formData.result
-      });
+      };
+      await axios.post('http://localhost:3001/admin/games', payload);
       setMessage('✅ Game added successfully!');
-      setFormData({ player1: '', player2: '', result: '1-0' });
+      setFormData({
+        white_player_id: '',
+        black_player_id: '',
+        result: '1-0'
+      });
 
-      // 🚀 Tell parent to refresh
-      if (onGameAdded) onGameAdded();
-
+      if (onGameAdded) onGameAdded(); // 🔥 refresh the game list
     } catch (err) {
       console.error('❌ Server error:', err);
       setMessage('❌ Failed to add game');
@@ -56,24 +56,42 @@ function AddGameForm({ onGameAdded }) {
   };
 
   return (
-    <div style={{ background: '#f0f0f0', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
+    <div style={{ background: '#f9f9f9', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
       <h3>Add New Game</h3>
       <form onSubmit={handleSubmit}>
-        <select name="player1" value={formData.player1} onChange={handleChange} required>
-          <option value="">Select Player 1 (white)</option>
-          {players.map(p => <option key={p.id} value={p.id}>{p.username}</option>)}
+        <select 
+          name="white_player_id" 
+          value={formData.white_player_id} 
+          onChange={handleChange} 
+          required
+        >
+          <option value="">Select White Player</option>
+          {players.map(p => (
+            <option key={p.id} value={p.id}>{p.username}</option>
+          ))}
         </select>
         {' '}vs{' '}
-        <select name="player2" value={formData.player2} onChange={handleChange} required>
-          <option value="">Select Player 2 (black)</option>
-          {players.map(p => <option key={p.id} value={p.id}>{p.username}</option>)}
+        <select 
+          name="black_player_id" 
+          value={formData.black_player_id} 
+          onChange={handleChange} 
+          required
+        >
+          <option value="">Select Black Player</option>
+          {players.map(p => (
+            <option key={p.id} value={p.id}>{p.username}</option>
+          ))}
         </select>
         <br /><br />
         <label>Result: </label>
-        <select name="result" value={formData.result} onChange={handleChange}>
-          <option value="1-0">1-0 (white wins)</option>
-          <option value="0-1">0-1 (black wins)</option>
-          <option value="½-½">½-½ (draw)</option>
+        <select 
+          name="result" 
+          value={formData.result} 
+          onChange={handleChange}
+        >
+          <option value="1-0">White Wins (1-0)</option>
+          <option value="0-1">Black Wins (0-1)</option>
+          <option value="½-½">Draw (½-½)</option>
         </select>
         <br /><br />
         <button type="submit">Add Game</button>

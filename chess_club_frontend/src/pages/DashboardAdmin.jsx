@@ -3,10 +3,10 @@ import AddGameForm from '../components/AddGameForm';
 import GameList from '../components/GameList';
 import axios from 'axios';
 
-function DashboardAdmin() {
+function DashboardAdmin({ user }) {
   const [games, setGames] = useState([]);
 
-  const fetchGames = () => {
+  const loadGames = () => {
     axios.get('http://localhost:3001/admin/games')
       .then(res => {
         console.log('✅ Games loaded:', res.data);
@@ -16,14 +16,13 @@ function DashboardAdmin() {
   };
 
   useEffect(() => {
-    fetchGames();
+    loadGames();
   }, []);
 
   return (
-    <div style={{ padding: '2rem', background: 'red' }}>
+    <div style={{ padding: '2rem' }}>
       <h1>🛡️ Admin Dashboard</h1>
-      <p>This is the admin area.</p>
-      <AddGameForm onGameAdded={fetchGames} />
+      <AddGameForm onGameAdded={loadGames} />
       <GameList games={games} />
     </div>
   );

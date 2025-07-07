@@ -1,39 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function PlayerDashboard({ userId }) {
+function PlayerDashboard({ user }) {
   const { playerId } = useParams();
+  const navigate = useNavigate();
+
+  const effectivePlayerId = playerId ? parseInt(playerId) : user?.id;
+
+  const [player, setPlayer] = useState(null);
   const [games, setGames] = useState([]);
-  const idToUse = playerId || userId;
 
   useEffect(() => {
-    if (!idToUse) return;
+    if (!user) {
+      navigate('/login');
+      return;
+    }
 
-    axios.get(`http://localhost:3001/player/${idToUse}/games`)
-      .then((res) => {
-        console.log('✅ Player games loaded:', res.data);
+    // If trying to view someone else, only allow admins
+    if (parseInt(effectivePlayerId) !== user.id && user.role !== 'admin') {
+      navigate('/');
+      return;
+    }
+
+    axios.get(`http://localhost:3001/player/${effectivePlayerId}`)
+      .then(res => {
+        console.log('✅ Loaded player:', res.data);
+        setPlayer(res.data);
+      })
+      .catch(err => console.error('❌ Error loading player:', err));
+
+    axios.get(`http://localhost:3001/player/${effectivePlayerId}/games`)
+      .then(res => {
+        console.log('✅ Loaded games:', res.data);
         setGames(res.data);
       })
-      .catch((err) => console.error('❌ Failed to load player games:', err));
-  }, [idToUse]);
+      .catch(err => console.error('❌ Error loading games:', err));
+
+  }, [user, effectivePlayerId, navigate]);
+
+  if (!player) return <div>Loading player data...</div>;
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h2>🎯 Player Dashboard {playerId ? `(ID: ${playerId})` : ''}</h2>
-      {games.length === 0 ? (
-        <p>No games found for this player yet.</p>
-      ) : (
-        <ul>
-          {games.map(game => (
-            <li key={game.id}>
-              vs <strong>{game.opponent}</strong> 
-              - result: <em>{game.result}</em>
-              - on {new Date(game.date_played).toLocaleDateString()}
-            </li>
-          ))}
-        </ul>
-      )}
+      <h1>{player.username}'s Dashboard</h1>
+      <p>Role: {player.role}</p>
+      <p>Avatar: {player.avatar}</p>
+
+      <h3>Games:</h3>
+      {games.map(game => (
+        <div key={game.id}>
+          vs <strong>{game.opponent}</strong> 
+          | Result: {game.result} 
+          | Date: {new Date(game.date_played).toLocaleDateString()}
+        </div>
+      ))}
     </div>
   );
 }

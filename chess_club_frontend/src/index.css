@@ -73,4 +73,18 @@ body {
   background-size: cover;
 }
 
+body {
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  min-height: 100vh;
+  padding-top: 2rem;
+  background-color: #f5f5f5;
+}
+
+#root {
+  width: 100%;
+  max-width: 800px; /* controls how wide your main container is */
+}
+
 }

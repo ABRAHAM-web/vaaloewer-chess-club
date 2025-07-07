@@ -1,0 +1,18 @@
+.home-background {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 60px); /* minus nav height */
+  background-image: url('/src/assets/unsplash.jpg');
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  text-align: center;
+}
+
+.home-heading {
+  font-size: 3rem;
+  color: white;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+}
