@@ -102,25 +102,30 @@ app.get('/player/:id', async (req, res) => {
 });
 
 app.get('/player/:id/games', async (req, res) => {
+  const playerId = req.params.id;
+  const sql = `
+    SELECT g.id, 
+           g.white_player_id,
+           g.black_player_id,
+           CASE
+             WHEN g.white_player_id = ? THEN u2.username
+             ELSE u1.username
+           END AS opponent,
+           g.result,
+           g.date_played
+    FROM games g
+    JOIN users u1 ON g.white_player_id = u1.id
+    JOIN users u2 ON g.black_player_id = u2.id
+    WHERE g.white_player_id = ? OR g.black_player_id = ?
+    ORDER BY g.date_played DESC
+  `;
+
   try {
-    const [results] = await db.query(`
-      SELECT 
-        g.id,
-        CASE 
-          WHEN g.white_player_id = ? THEN u2.username
-          ELSE u1.username
-        END AS opponent,
-        g.result,
-        g.date_played
-      FROM games g
-      JOIN users u1 ON g.white_player_id = u1.id
-      JOIN users u2 ON g.black_player_id = u2.id
-      WHERE g.white_player_id = ? OR g.black_player_id = ?
-      ORDER BY g.date_played DESC
-    `, [req.params.id, req.params.id, req.params.id]);
-    res.json(results);
+    const [rows] = await db.query(sql, [playerId, playerId, playerId]);
+    res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: 'DB error', error: err.message });
+    console.error('❌ Error fetching games:', err);
+    res.status(500).json({ message: 'DB error' });
   }
 });
 

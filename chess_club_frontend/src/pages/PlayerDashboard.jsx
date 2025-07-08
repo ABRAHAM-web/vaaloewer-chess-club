@@ -17,7 +17,7 @@ function PlayerDashboard({ user }) {
       return;
     }
 
-    // If trying to view someone else, only allow admins
+    // Only allow access if the user is viewing their own or is admin
     if (parseInt(effectivePlayerId) !== user.id && user.role !== 'admin') {
       navigate('/');
       return;
@@ -48,13 +48,65 @@ function PlayerDashboard({ user }) {
       <p>Avatar: {player.avatar}</p>
 
       <h3>Games:</h3>
-      {games.map(game => (
-        <div key={game.id}>
-          vs <strong>{game.opponent}</strong> 
-          | Result: {game.result} 
-          | Date: {new Date(game.date_played).toLocaleDateString()}
-        </div>
-      ))}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
+        {games.map(game => {
+          const playerId = parseInt(player.id);
+          const whiteId = parseInt(game.white_player_id);
+          const blackId = parseInt(game.black_player_id);
+
+          let outcome = 'Draw';
+          let icon = '➗';
+          let color = '#999';
+
+          if (
+            (game.result === '1-0' && whiteId === playerId) ||
+            (game.result === '0-1' && blackId === playerId)
+          ) {
+            outcome = 'Won';
+            icon = '✅';
+            color = 'green';
+          } else if (
+            (game.result === '1-0' && blackId === playerId) ||
+            (game.result === '0-1' && whiteId === playerId)
+          ) {
+            outcome = 'Lost';
+            icon = '❌';
+            color = 'darkred';
+          }
+
+          return (
+            <div 
+              key={game.id} 
+              style={{ 
+                border: '1px solid #ccc', 
+                borderRadius: '8px',
+                padding: '1rem',
+                boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
+                background: '#fff',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '1.1rem', marginBottom: '0.3rem' }}>
+                  vs <strong>{game.opponent}</strong>
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#666' }}>
+                  {new Date(game.date_played).toLocaleDateString()}
+                </div>
+              </div>
+              <div style={{ fontSize: '1.2rem', color }}>
+                {icon} {outcome}
+              </div>
+            </div>
+          );
+        })}
+</div>
+
+
+
+
     </div>
   );
 }

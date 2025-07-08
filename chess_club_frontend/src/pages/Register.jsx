@@ -1,6 +1,7 @@
-// src/pages/Register.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -8,6 +9,7 @@ function Register() {
     password: ''
   });
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -18,50 +20,53 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("🚀 Submitting:", formData);  // DEBUG LINE
 
     try {
-      const res = await axios.post('http://localhost:3001/register', {
-        username: formData.username,
-        password: formData.password
-      });
-      console.log('✅ Registered:', res.data);
-      setMessage('✅ Registration successful! You can now log in.');
-      setFormData({ username: '', password: '' });
+      console.log('🚀 Attempting registration:', formData);
+      const res = await axios.post('http://localhost:3001/register', formData);
+      console.log('✅ Registration response:', res.data);
+
+      setMessage('✅ Registration successful! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 1000);
+
     } catch (err) {
-      if (err.response) {
-        console.error('❌ Registration error:', err.response.data);
-        setMessage(`❌ ${err.response.data.message}`);
-      } else {
-        console.error('❌ Connection error:', err.message);
-        setMessage('❌ Failed to connect to server');
-      }
+      console.error('❌ Registration error:', err);
+      setMessage(`❌ ${err.response?.data?.message || 'Registration failed'}`);
     }
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Register</h2>
+    <div style={{ 
+      background: '#f9f9f9', 
+      padding: '2rem', 
+      borderRadius: '8px', 
+      maxWidth: '400px', 
+      margin: '2rem auto' 
+    }}>
+
+      <h1>Register</h1>
       <form onSubmit={handleSubmit}>
         <input 
           type="text" 
-          name="username" 
+          name="username"
+          placeholder="Username"
           value={formData.username}
           onChange={handleChange}
-          placeholder="Username"
           required
-        /><br /><br />
+          style={{ display: 'block', marginBottom: '1rem', width: '100%' }}
+        />
         <input 
           type="password" 
-          name="password" 
+          name="password"
+          placeholder="Password"
           value={formData.password}
           onChange={handleChange}
-          placeholder="Password"
           required
-        /><br /><br />
+          style={{ display: 'block', marginBottom: '1rem', width: '100%' }}
+        />
         <button type="submit">Register</button>
       </form>
-      {message && <p>{message}</p>}
+      {message && <p style={{ marginTop: '1rem' }}>{message}</p>}
     </div>
   );
 }

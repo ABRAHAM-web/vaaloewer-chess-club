@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, Outlet } from 'react-router-dom';
+import SiteLogo from '../components/SiteLogo';
 
 function Layout({ user,avatar }) {
 
@@ -11,6 +12,7 @@ function Layout({ user,avatar }) {
 
   return (
     <div>
+    <SiteLogo/>
       <nav style={{ 
         display: 'flex', 
         gap: '1rem', 
