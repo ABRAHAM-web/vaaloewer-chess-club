@@ -1,3 +1,4 @@
+// src/components/GameList.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -5,6 +6,7 @@ function GameList() {
   const [games, setGames] = useState([]);
   const [message, setMessage] = useState('');
 
+  // Fetching games when the component mounts
   useEffect(() => {
     axios.get('http://localhost:3001/admin/games')
       .then((res) => {
@@ -13,11 +15,11 @@ function GameList() {
       })
       .catch((err) => {
         console.error('⚠️ Error fetching games:', err);
-        setMessage('⚠️ Failed to load games');
+        setMessage('⚠️ Failed to load games');  // Set error message if fetching fails
       });
   }, []);
 
-  // Helper to color results
+  // Helper function to get a color based on the game result
   const getResultStyle = (result) => {
     if (result === '1-0') return { color: 'green', fontWeight: 'bold' };
     if (result === '0-1') return { color: 'red', fontWeight: 'bold' };
@@ -33,8 +35,11 @@ function GameList() {
       marginTop: '2rem'
     }}>
       <h3>All Past Games</h3>
+
+      {/* Display error message if any */}
       {message && <p>{message}</p>}
 
+      {/* Display games in a table if available */}
       {games.length === 0 ? (
         <p>No games have been recorded yet.</p>
       ) : (
@@ -54,6 +59,7 @@ function GameList() {
                 <td>{game.id}</td>
                 <td>{game.white_player}</td>
                 <td>{game.black_player}</td>
+                {/* Applying the result color style */}
                 <td style={getResultStyle(game.result)}>
                   {game.result}
                 </td>
