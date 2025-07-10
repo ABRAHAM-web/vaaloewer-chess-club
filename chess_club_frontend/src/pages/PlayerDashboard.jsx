@@ -1,112 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-function PlayerDashboard({ user }) {
-  const { playerId } = useParams();
-  const navigate = useNavigate();
-
-  const effectivePlayerId = playerId ? parseInt(playerId) : user?.id;
-
+function PlayerDashboard() {
   const [player, setPlayer] = useState(null);
   const [games, setGames] = useState([]);
+  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
+    if (user) {
+      axios.get(`http://localhost:3001/player/${user.id}`)
+        .then(res => setPlayer(res.data))
+        .catch(err => console.error('❌ Error loading player:', err));
+
+      axios.get(`http://localhost:3001/player/${user.id}/games`)
+        .then(res => setGames(res.data))
+        .catch(err => console.error('❌ Error loading games:', err));
     }
-
-    // Only allow access if the user is viewing their own or is admin
-    if (parseInt(effectivePlayerId) !== user.id && user.role !== 'admin') {
-      navigate('/');
-      return;
-    }
-
-    axios.get(`http://localhost:3001/player/${effectivePlayerId}`)
-      .then(res => {
-        console.log('✅ Loaded player:', res.data);
-        setPlayer(res.data);
-      })
-      .catch(err => console.error('❌ Error loading player:', err));
-
-    axios.get(`http://localhost:3001/player/${effectivePlayerId}/games`)
-      .then(res => {
-        console.log('✅ Loaded games:', res.data);
-        setGames(res.data);
-      })
-      .catch(err => console.error('❌ Error loading games:', err));
-
-  }, [user, effectivePlayerId, navigate]);
-
-  if (!player) return <div>Loading player data...</div>;
+  }, [user]);
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>{player.username}'s Dashboard</h1>
-      <p>Role: {player.role}</p>
-      <p>Avatar: {player.avatar}</p>
+    <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '1rem' }}>
+      {player && (
+        <div style={{
+          background: '#fff',
+          padding: '1.5rem',
+          borderRadius: '10px',
+          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+          marginBottom: '2rem'
+        }}>
+          <h2>{player.username}'s Dashboard</h2>
+          <p><strong>Points:</strong> {player.points}</p>
+          <p><strong>Wins:</strong> {player.wins} | <strong>Losses:</strong> {player.losses} | <strong>Draws:</strong> {player.draws}</p>
+          <p><strong>Total Games:</strong> {player.total_games}</p>
+        </div>
+      )}
 
-      <h3>Games:</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
-        {games.map(game => {
-          const playerId = parseInt(player.id);
-          const whiteId = parseInt(game.white_player_id);
-          const blackId = parseInt(game.black_player_id);
-
-          let outcome = 'Draw';
-          let icon = '➗';
-          let color = '#999';
-
-          if (
-            (game.result === '1-0' && whiteId === playerId) ||
-            (game.result === '0-1' && blackId === playerId)
-          ) {
-            outcome = 'Won';
-            icon = '✅';
-            color = 'green';
-          } else if (
-            (game.result === '1-0' && blackId === playerId) ||
-            (game.result === '0-1' && whiteId === playerId)
-          ) {
-            outcome = 'Lost';
-            icon = '❌';
-            color = 'darkred';
-          }
-
-          return (
-            <div 
-              key={game.id} 
-              style={{ 
-                border: '1px solid #ccc', 
-                borderRadius: '8px',
-                padding: '1rem',
-                boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
-                background: '#fff',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <div>
-                <div style={{ fontSize: '1.1rem', marginBottom: '0.3rem' }}>
-                  vs <strong>{game.opponent}</strong>
-                </div>
-                <div style={{ fontSize: '0.9rem', color: '#666' }}>
-                  {new Date(game.date_played).toLocaleDateString()}
-                </div>
-              </div>
-              <div style={{ fontSize: '1.2rem', color }}>
-                {icon} {outcome}
-              </div>
-            </div>
-          );
-        })}
-</div>
-
-
-
-
+      <div>
+        <h3>Game History</h3>
+        {games.length === 0 && <p>No games played yet.</p>}
+        {games.map(game => (
+          <div key={game.id} style={{
+            background: '#fafafa',
+            margin: '0.5rem 0',
+            padding: '0.8rem',
+            borderRadius: '6px',
+            border: '1px solid #ddd',
+            fontSize: '0.95rem'
+          }}>
+            <strong>{game.white_player}</strong> vs <strong>{game.black_player}</strong>
+            &nbsp;| Result: {game.result}
+            &nbsp;| {new Date(game.date_played).toLocaleDateString()}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

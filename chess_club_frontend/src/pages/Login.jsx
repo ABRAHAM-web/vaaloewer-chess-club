@@ -1,43 +1,38 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 function Login({ setUser }) {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    console.log('🚀 Attempting login:', formData);
+    const res = await axios.post('http://localhost:3001/login', formData);
+    console.log('✅ Login response:', res.data);
 
-    try {
-      console.log('🚀 Attempting login:', formData);
-      const res = await axios.post('http://localhost:3001/login', formData);
-      console.log('✅ Login response:', res.data);
+    const user = res.data.user;
+    localStorage.setItem('user', JSON.stringify(user));
+    setUser(user);
 
-      const user = res.data.user;
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
+    setMessage('✅ Login successful! Redirecting...');
+    console.log('🌍 Going to player-dashboard now...');
+    navigate('/player-dashboard');
+    console.log('✅ Navigation done');
+  } catch (err) {
+    console.error('❌ Login error:', err);
+    setMessage('❌ Invalid username or password');
+  }
+};
 
-      setMessage('✅ Login successful! Redirecting...');
-      // ✅ Redirect all users (admin + players) to their own player dashboard
-      navigate('/player-dashboard');
-
-    } catch (err) {
-      console.error('❌ Login error:', err);
-      setMessage('❌ Invalid username or password');
-    }
-  };
 
   return (
     <div style={{ 

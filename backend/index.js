@@ -102,97 +102,27 @@ app.get('/player/:id', async (req, res) => {
 });
 
 app.get('/player/:id/games', async (req, res) => {
-  const playerId = req.params.id;
-  const sql = `
-    SELECT g.id, 
-           g.white_player_id,
-           g.black_player_id,
-           CASE
-             WHEN g.white_player_id = ? THEN u2.username
-             ELSE u1.username
-           END AS opponent,
-           g.result,
-           g.date_played
-    FROM games g
-    JOIN users u1 ON g.white_player_id = u1.id
-    JOIN users u2 ON g.black_player_id = u2.id
-    WHERE g.white_player_id = ? OR g.black_player_id = ?
-    ORDER BY g.date_played DESC
-  `;
-
-  try {
-    const [rows] = await db.query(sql, [playerId, playerId, playerId]);
-    res.json(rows);
-  } catch (err) {
-    console.error('❌ Error fetching games:', err);
-    res.status(500).json({ message: 'DB error' });
-  }
-});
-
-app.get('/players/standings', async (req, res) => {
   try {
     const [results] = await db.query(`
       SELECT 
-        u.id, u.username,
-        COALESCE(SUM(
-          CASE 
-            WHEN g.result = '1-0' AND g.white_player_id = u.id THEN 1
-            WHEN g.result = '0-1' AND g.black_player_id = u.id THEN 1
-            WHEN g.result = '½-½' THEN 0.5
-            ELSE 0
-          END
-        ),0) AS points,
-        COALESCE(SUM(
-          CASE 
-            WHEN g.result = '1-0' AND g.white_player_id = u.id THEN 1
-            WHEN g.result = '0-1' AND g.black_player_id = u.id THEN 1
-            ELSE 0
-          END
-        ),0) AS wins,
-        COALESCE(SUM(
-          CASE 
-            WHEN g.result = '0-1' AND g.white_player_id = u.id THEN 1
-            WHEN g.result = '1-0' AND g.black_player_id = u.id THEN 1
-            ELSE 0
-          END
-        ),0) AS losses,
-        COALESCE(SUM(
-          CASE WHEN g.result = '½-½' THEN 1 ELSE 0 END
-        ),0) AS draws,
-        COUNT(g.id) AS total_games
-      FROM users u
-      LEFT JOIN games g ON u.id = g.white_player_id OR u.id = g.black_player_id
-      GROUP BY u.id
-      ORDER BY points DESC, u.username ASC
-    `);
+        g.id,
+        CASE 
+          WHEN g.white_player_id = ? THEN u2.username
+          ELSE u1.username
+        END AS opponent,
+        g.result,
+        g.date_played
+      FROM games g
+      JOIN users u1 ON g.white_player_id = u1.id
+      JOIN users u2 ON g.black_player_id = u2.id
+      WHERE g.white_player_id = ? OR g.black_player_id = ?
+      ORDER BY g.date_played DESC
+    `, [req.params.id, req.params.id, req.params.id]);
     res.json(results);
   } catch (err) {
-    console.error('❌ Error fetching standings:', err);
     res.status(500).json({ message: 'DB error', error: err.message });
   }
 });
-
-app.post('/admin/games', async (req, res) => {
-  const { white_player_id, black_player_id, result } = req.body;
-
-  if (!white_player_id || !black_player_id || !result) {
-    return res.status(400).json({ message: 'Missing game data' });
-  }
-
-  try {
-    const [insertResult] = await db.query(
-      `INSERT INTO games (white_player_id, black_player_id, result)
-       VALUES (?, ?, ?)`,
-      [white_player_id, black_player_id, result]
-    );
-    console.log('✅ Game added with ID:', insertResult.insertId);
-    res.status(201).json({ message: 'Game added', gameId: insertResult.insertId });
-  } catch (err) {
-    console.error('❌ Error adding game:', err);
-    res.status(500).json({ message: 'DB error', error: err.message });
-  }
-});
-
 
 app.post('/admin/player/:id/update', async (req, res) => {
   const { role, avatar } = req.body;
@@ -204,6 +134,46 @@ app.post('/admin/player/:id/update', async (req, res) => {
     res.status(500).json({ message: 'DB error', error: err.message });
   }
 });
+
+app.get('/players/standings', async (req, res) => {
+  try {
+    const sql = `
+      SELECT 
+        u.id, 
+        u.username,
+        COALESCE(SUM(CASE 
+          WHEN (g.result = '1-0' AND g.white_player_id = u.id) OR
+               (g.result = '0-1' AND g.black_player_id = u.id)
+          THEN 1 ELSE 0 END), 0) AS wins,
+        COALESCE(SUM(CASE 
+          WHEN (g.result = '0-1' AND g.white_player_id = u.id) OR
+               (g.result = '1-0' AND g.black_player_id = u.id)
+          THEN 1 ELSE 0 END), 0) AS losses,
+        COALESCE(SUM(CASE WHEN g.result = '½-½' THEN 1 ELSE 0 END), 0) AS draws,
+        COUNT(g.id) AS total_games,
+        COALESCE(SUM(
+          CASE 
+            WHEN g.result = '1-0' AND g.white_player_id = u.id THEN 1
+            WHEN g.result = '0-1' AND g.black_player_id = u.id THEN 1
+            ELSE 0
+          END
+        ),0) AS points
+      FROM users u
+      LEFT JOIN games g ON u.id = g.white_player_id OR u.id = g.black_player_id
+      WHERE u.role = 'player' OR u.role = 'admin'
+      GROUP BY u.id
+      ORDER BY points DESC, u.username ASC
+    `;
+    const [results] = await db.query(sql);
+    res.json(results);
+
+  } catch (err) {
+    console.error('❌ Error fetching standings:', err);
+    res.status(500).json({ message: 'DB error', error: err });
+  }
+});
+
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);

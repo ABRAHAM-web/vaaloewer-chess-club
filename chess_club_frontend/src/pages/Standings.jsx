@@ -2,62 +2,70 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-function Standings({ user }) {
+function Standings() {
   const [standings, setStandings] = useState([]);
-  const [loaded, setLoaded] = useState(false);
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     axios.get('http://localhost:3001/players/standings')
       .then(res => {
         console.log('✅ Standings loaded:', res.data);
         setStandings(res.data);
-        setTimeout(() => setLoaded(true), 100);  // slight delay so animations trigger
       })
-      .catch(err => console.error('❌ Error loading standings:', err));
+      .catch(err => {
+        console.error('❌ Error loading standings:', err);
+      });
   }, []);
 
-  const handleClick = (player) => {
-    if (!user) return;
-    if (user.role === 'admin' || user.id === player.id) {
-      navigate(`/player/${player.id}`);
-    }
-  };
+  const maxPoints = standings.length > 0 ? Math.max(...standings.map(p => p.points)) : 1;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Club Standings</h1>
-      {standings.map((player, idx) => {
-        // Score width relative to the highest score
-        const maxPoints = standings[0]?.points || 1;
-        const percent = (player.points / maxPoints) * 100;
+    <div style={{ maxWidth: '800px', margin: '2rem auto', padding: '1rem' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '2rem' }}>Player Standings</h2>
+
+      {standings.length === 0 && <p>No data available.</p>}
+
+      {standings.map(player => {
+        const clickable = user && (user.id === player.id || user.role === 'admin');
+        const barWidth = (player.points / maxPoints) * 100;
 
         return (
-          <div 
+          <div
             key={player.id}
-            onClick={() => handleClick(player)}
-            style={{
-              margin: '1rem 0',
-              padding: '0.5rem 1rem',
-              background: '#eee',
-              borderRadius: '8px',
-              cursor: (user && (user.role === 'admin' || user.id === player.id)) ? 'pointer' : 'default',
-              overflow: 'hidden'
+            onClick={() => {
+              if (clickable) {
+                console.log(`➡️ Navigating to dashboard for user ID: ${player.id}`);
+                navigate('/player-dashboard');
+              }
             }}
+            style={{
+              background: '#fafafa',
+              margin: '1rem 0',
+              padding: '1rem',
+              borderRadius: '10px',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+              cursor: clickable ? 'pointer' : 'default',
+              transition: 'transform 0.2s'
+            }}
+            onMouseEnter={e => clickable && (e.currentTarget.style.transform = 'scale(1.02)')}
+            onMouseLeave={e => clickable && (e.currentTarget.style.transform = 'scale(1)')}
           >
-            <div 
-              style={{
-                width: loaded ? `${percent}%` : '0%',
-                transition: 'width 1s ease-out',
-                background: '#8b4513', // wood brown
-                color: 'white',
-                padding: '0.5rem',
-                borderRadius: '8px',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {player.username} - {player.points} pts 
-              ({player.wins}W / {player.losses}L / {player.draws}D)
+            <div style={{
+              height: '25px',
+              width: `${barWidth}%`,
+              background: 'linear-gradient(90deg, #4caf50, #81c784)',
+              borderRadius: '6px',
+              transition: 'width 0.4s'
+            }}></div>
+            
+            <div style={{ marginTop: '0.8rem', fontSize: '0.95rem' }}>
+              <strong>{player.username}</strong>
+              &nbsp;| Points: {player.points}
+              &nbsp;| Wins: {player.wins}
+              &nbsp;| Losses: {player.losses}
+              &nbsp;| Draws: {player.draws}
+              &nbsp;| Total: {player.total_games}
             </div>
           </div>
         );
