@@ -1,4 +1,4 @@
-// src/pages/Login.jsx
+  // src/pages/Login.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +29,7 @@ function Login({ setUser }) {
 
       setMessage('✅ Login successful! Redirecting...');
       console.log('🌍 Going to player-dashboard now...');
-      navigate('/player-dashboard');  // Redirect to player dashboard after login
+      navigate(`/player-dashboard/${user.id}`);
       console.log('✅ Navigation done');
     } catch (err) {
       console.error('❌ Login error:', err);

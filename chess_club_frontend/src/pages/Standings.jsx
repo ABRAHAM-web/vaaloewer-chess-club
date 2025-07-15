@@ -1,3 +1,4 @@
+// src/pages/Standings.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -33,12 +34,7 @@ function Standings() {
         return (
           <div
             key={player.id}
-            onClick={() => {
-              if (clickable) {
-                console.log(`➡️ Navigating to dashboard for user ID: ${player.id}`);
-                navigate('/player-dashboard');
-              }
-            }}
+            onClick={() => clickable && navigate(`/player-dashboard/${player.id}`)}
             style={{
               background: '#fafafa',
               margin: '1rem 0',

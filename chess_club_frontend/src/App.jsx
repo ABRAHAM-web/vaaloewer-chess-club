@@ -21,8 +21,8 @@ function App() {
           <Route path="standings" element={<Standings />} />
           <Route path="login" element={<Login setUser={setUser} />} />
           <Route path="register" element={<Register setUser={setUser} />} />
-          <Route path="admin" element={<DashboardAdmin />} />
-          <Route path="player-dashboard" element={<PlayerDashboard />} />
+          <Route path="admin" element={<DashboardAdmin />} />       
+          <Route path="player-dashboard/:playerId?" element={<PlayerDashboard />} />
           <Route path="challenge" element={<Challenge />} />
         </Route>
       </Routes>
