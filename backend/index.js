@@ -19,6 +19,10 @@ const db = mysql.createPool({
 });
 
 // Health check
+app.get('/', (req, res) => {
+  res.send('Chess Club API running');
+});
+
 app.get('/health', async (req, res) => {
   try {
     await db.query('SELECT 1');
@@ -39,24 +43,46 @@ app.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
-    res.json({ user: { id: user.id, username: user.username, role: user.role, email: user.email, avatar: user.avatar, is_available: user.is_available } });
+    res.json({
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        email: user.email,
+        avatar: user.avatar,
+        is_available: user.is_available
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: 'Login failed', error: err.message });
   }
 });
 
 // User register
-app.post('/register', async (req, res) => {
+app.post("/register", async (req, res) => {
   const { username, password, email } = req.body;
-  try {
-    const [exists] = await db.query('SELECT id FROM users WHERE username = ?', [username]);
-    if (exists.length > 0) return res.status(409).json({ message: 'Username already exists' });
+  console.log("Received registration request:", req.body);
 
-    const hashed = await bcrypt.hash(password, 10);
-    await db.query('INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)', [username, hashed, 'player', email]);
-    res.status(201).json({ message: 'Registered successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Registration failed', error: err.message });
+  if (!username || !password || !email) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
+  try {
+    const [existingUser] = await db.query("SELECT * FROM users WHERE username = ?", [username]);
+    if (existingUser.length > 0) {
+      return res.status(409).json({ error: "Username already taken" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await db.query(
+      "INSERT INTO users (username, password, email) VALUES (?, ?, ?)",
+      [username, hashedPassword, email]
+    );
+
+    res.status(201).json({ message: "User registered" });
+  } catch (error) {
+    console.error("❌ Registration failed:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -94,16 +120,17 @@ app.get('/players/standings', async (req, res) => {
 
 // Player info
 app.get('/player/:id', async (req, res) => {
+  const { id } = req.params;
   try {
-    const [players] = await db.query(`
-      SELECT 
-        id, username, role, avatar, email, is_available
-      FROM users WHERE id = ?
-    `, [req.params.id]);
-    if (players.length === 0) return res.status(404).json({ message: 'Player not found' });
-    res.json(players[0]);
+    const [rows] = await db.query("SELECT * FROM users WHERE id = ?", [id]);
+    if (rows.length > 0) {
+      res.json(rows[0]);
+    } else {
+      res.status(404).json({ message: "Player not found" });
+    }
   } catch (err) {
-    res.status(500).json({ message: 'Error loading player data', error: err.message });
+    console.error("Error fetching player:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -126,17 +153,24 @@ app.get('/player/:id/games', async (req, res) => {
 });
 
 // Update player (admin & self-edit)
-app.post('/player/:id/update', async (req, res) => {
+app.put('/player/:id', async (req, res) => {
   const { email, avatar, is_available, role } = req.body;
+
+  if (!email || typeof is_available === 'undefined') {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
   try {
     await db.query(`
       UPDATE users 
       SET email = ?, avatar = ?, is_available = ?, role = ?
       WHERE id = ?
-    `, [email, avatar, is_available, role, req.params.id]);
-    res.json({ message: 'Player updated' });
+    `, [email, avatar || null, is_available ? 1 : 0, role, req.params.id]);
+
+    const [updated] = await db.query("SELECT * FROM users WHERE id = ?", [req.params.id]);
+    res.json(updated[0]);
   } catch (err) {
-    res.status(500).json({ message: 'Failed to update', error: err.message });
+    res.status(500).json({ message: 'Failed to update player', error: err.message });
   }
 });
 
@@ -183,3 +217,4 @@ app.post('/admin/games', async (req, res) => {
 
 // Start the server
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+console.log("✅ Ek is regtig heel onder in server.js");

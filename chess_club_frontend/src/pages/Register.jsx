@@ -1,72 +1,80 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+// src/pages/Register.jsx
 
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
-  const [message, setMessage] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null); // clear any previous errors
 
     try {
-      console.log('🚀 Attempting registration:', formData);
-      const res = await axios.post('http://localhost:3001/register', formData);
-      console.log('✅ Registration response:', res.data);
+      const res = await axios.post("http://localhost:3001/register", {
+        username,
+        password,
+        email,
+      });
 
-      setMessage('✅ Registration successful! Redirecting to login...');
-      setTimeout(() => navigate('/login'), 1000);
-
+      console.log("✅ Registered:", res.data);
+      navigate("/login"); // redirect to login page
     } catch (err) {
-      console.error('❌ Registration error:', err);
-      setMessage(`❌ ${err.response?.data?.message || 'Registration failed'}`);
-    }
+      console.error("❌ Registration error:", err);
+      if (err.response && err.response.status === 409) {
+        setError("Username already taken.");
+      } else if (err.response && err.response.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+}
+
   };
 
   return (
-    <div style={{ 
-      background: '#f9f9f9', 
-      padding: '2rem', 
-      borderRadius: '8px', 
-      maxWidth: '400px', 
-      margin: '2rem auto' 
-    }}>
-
-      <h1>Register</h1>
+    <div className="register-container" style={{ maxWidth: 400, margin: "auto" }}>
+      <h2>Register</h2>
       <form onSubmit={handleSubmit}>
-        <input 
-          type="text" 
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', marginBottom: '1rem', width: '100%' }}
-        />
-        <input 
-          type="password" 
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', marginBottom: '1rem', width: '100%' }}
-        />
+        <div style={{ marginBottom: 10 }}>
+          <label>Username:</label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <label>Password:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <div style={{ marginBottom: 10 }}>
+          <label>Email:</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
         <button type="submit">Register</button>
       </form>
-      {message && <p style={{ marginTop: '1rem' }}>{message}</p>}
+
+      {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
     </div>
   );
 }

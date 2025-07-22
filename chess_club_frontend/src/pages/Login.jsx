@@ -1,76 +1,67 @@
-  // src/pages/Login.jsx
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 function Login({ setUser }) {
   const [formData, setFormData] = useState({ username: '', password: '' });
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      console.log('🚀 Attempting login:', formData);
+    setError(null);
 
-      // Send POST request to the login endpoint
-      const response = await axios.post('http://localhost:3001/login', formData);
+    console.log("🚀 Attempting login:", formData);
 
-      console.log('✅ Login response:', response.data);
-
-      // Store the user data in localStorage and update the state
-      const user = response.data.user;
-      localStorage.setItem('user', JSON.stringify(user));  // Store the full user data
-      setUser(user);  // Set the user in the state to update the UI
-
-      setMessage('✅ Login successful! Redirecting...');
-      console.log('🌍 Going to player-dashboard now...');
-      navigate(`/player-dashboard/${user.id}`);
-      console.log('✅ Navigation done');
-    } catch (err) {
-      console.error('❌ Login error:', err);
-      setMessage('❌ Invalid username or password');  // Show error message if login fails
-    }
+    axios.post('http://localhost:3001/login', formData)
+      .then((res) => {
+        const user = res.data.user;
+        console.log("✅ Login success:", user);
+        localStorage.setItem('user', JSON.stringify(user));
+        setUser(user); // ✅ Set the logged-in user in app state
+        navigate(`/player/${user.id}`); // Go to player dashboard
+      })
+      .catch((err) => {
+        console.error("❌ Login error:", err);
+        setError('Login failed: ' + (err.response?.data?.message || 'Unknown error'));
+      });
   };
 
   return (
-    <div style={{ 
-      background: '#f9f9f9', 
-      padding: '2rem', 
-      borderRadius: '8px', 
-      maxWidth: '400px', 
-      margin: '2rem auto' 
-    }}>
-      <h1>Login</h1>
+    <div style={{ padding: '2rem' }}>
+      <h2>Login</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        <input 
-          type="text" 
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', marginBottom: '1rem', width: '100%' }}
-        />
-        <input 
-          type="password" 
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', marginBottom: '1rem', width: '100%' }}
-        />
-        <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-          Login
-        </button>
-      </form>
+        <div>
+          <label>Username:</label><br />
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+        </div>
 
-      {message && <p style={{ marginTop: '1rem', color: 'red' }}>{message}</p>}  {/* Display error or success message */}
+        <div>
+          <label>Password:</label><br />
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <button type="submit" style={{ marginTop: '1rem' }}>Login</button>
+      </form>
     </div>
   );
 }
