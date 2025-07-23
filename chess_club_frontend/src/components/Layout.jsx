@@ -26,7 +26,8 @@ function Layout({ user,avatar }) {
         {!user && <Link to="/register">Register</Link>}
 
         {user && user.role === 'admin' && <Link to="/admin">Admin</Link>}
-        {user && <Link to="/player-dashboard">My Dashboard</Link>}
+        {user && <Link to={`/player/${user?.id}`}>My Dashboard</Link> 
+}
         {!user && <Link to="/login">Login</Link>} 
 
         {user && (
