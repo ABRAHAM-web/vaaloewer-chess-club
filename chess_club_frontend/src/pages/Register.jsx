@@ -1,81 +1,43 @@
-// src/pages/Register.jsx
-
-import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import AuthWrapper from '../components/AuthWrapper';
 
 function Register() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({ username: '', password: '', email: '' });
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null); // clear any previous errors
-
     try {
-      const res = await axios.post("http://localhost:3001/register", {
-        username,
-        password,
-        email,
-      });
-
-      console.log("✅ Registered:", res.data);
-      navigate("/login"); // redirect to login page
+      await axios.post('http://localhost:3001/register', formData);
+      alert('Registered successfully! You can now log in.');
+      navigate('/login');
     } catch (err) {
-      console.error("❌ Registration error:", err);
-      if (err.response && err.response.status === 409) {
-        setError("Username already taken.");
-      } else if (err.response && err.response.data?.error) {
-        setError(err.response.data.error);
-      } else {
-        setError("Registration failed. Please try again.");
-      }
-}
-
+      console.error('❌ Registration error:', err);
+      alert('Registration failed');
+    }
   };
 
   return (
-    <div className="register-container" style={{ maxWidth: 400, margin: "auto" }}>
-      <h2>Register</h2>
+    <AuthWrapper title="Register">
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 10 }}>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-
-        <div style={{ marginBottom: 10 }}>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <div style={{ marginBottom: 10 }}>
-          <label>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-
+        <label>Username</label>
+        <input name="username" value={formData.username} onChange={handleChange} required />
+        <label>Email</label>
+        <input name="email" type="email" value={formData.email} onChange={handleChange} required />
+        <label>Password</label>
+        <input type="password" name="password" value={formData.password} onChange={handleChange} required />
         <button type="submit">Register</button>
       </form>
-
-      {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
-    </div>
+    </AuthWrapper>
   );
 }
 
