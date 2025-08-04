@@ -7,7 +7,7 @@ function DashboardAdmin({ user }) {
   const [games, setGames] = useState([]);
 
   const loadGames = () => {
-    axios.get('http://localhost:3001/admin/games')
+    axios.get('http://localhost:3001/games')
       .then(res => {
         console.log('✅ Games loaded:', res.data);
         setGames(res.data);

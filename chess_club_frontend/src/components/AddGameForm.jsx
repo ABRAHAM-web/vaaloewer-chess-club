@@ -11,7 +11,7 @@ function AddGameForm({ onGameAdded }) {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:3001/admin/players')
+    axios.get('http://localhost:3001/players')
       .then(res => {
         console.log('✅ Players loaded:', res.data);
         setPlayers(res.data);

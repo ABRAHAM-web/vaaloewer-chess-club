@@ -8,7 +8,7 @@ function GameList() {
 
   // Fetching games when the component mounts
   useEffect(() => {
-    axios.get('http://localhost:3001/admin/games')
+    axios.get('http://localhost:3001/games')
       .then((res) => {
         console.log('✅ Games loaded:', res.data);
         setGames(res.data);

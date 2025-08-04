@@ -17,7 +17,7 @@ function Login({ setUser }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:3001/login', formData);
+      const res = await axios.post('http://localhost:3001/auth/login', formData);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setUser(res.data.user);
       navigate(res.data.user.role === 'admin' ? '/admin' : `/player/${res.data.user.id}`);

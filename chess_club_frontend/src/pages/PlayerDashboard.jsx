@@ -30,7 +30,7 @@ function PlayerDashboard() {
     if (!actualId) return;
 
     // Fetch player info
-    axios.get(`http://localhost:3001/player/${actualId}`)
+    axios.get(`http://localhost:3001/players/${actualId}`)
       .then((res) => {
         setPlayer(res.data);
         setUpdatedPlayer(res.data);
@@ -41,7 +41,7 @@ function PlayerDashboard() {
       });
 
     // Fetch games
-    axios.get(`http://localhost:3001/player/${actualId}/games`)
+    axios.get(`http://localhost:3001/players/${actualId}/games`)
       .then((res) => {
         console.log("📅 Game dates:", res.data.map(g => g.date_played));
         setGames(res.data);
