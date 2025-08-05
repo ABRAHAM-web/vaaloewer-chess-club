@@ -21,6 +21,28 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST a new game (admin adds game)
+router.post('/', async (req, res) => {
+  const { white_player_id, black_player_id, result } = req.body;
+
+  if (!white_player_id || !black_player_id || !result) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  try {
+    await db.query(`
+      INSERT INTO games (white_player_id, black_player_id, result, date_played)
+      VALUES (?, ?, ?, NOW())
+    `, [white_player_id, black_player_id, result]);
+
+    res.status(201).json({ message: 'Game added successfully' });
+  } catch (err) {
+    console.error('❌ Failed to insert game:', err);
+    res.status(500).json({ message: 'Failed to add game', error: err.message });
+  }
+});
+
+
 
 
 export default router;

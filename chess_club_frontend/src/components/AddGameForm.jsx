@@ -40,7 +40,7 @@ function AddGameForm({ onGameAdded }) {
         black_player_id: parseInt(formData.black_player_id),
         result: formData.result
       };
-      await axios.post('http://localhost:3001/admin/games', payload);
+      await axios.post('http://localhost:3001/games/', payload);
       setMessage('✅ Game added successfully!');
       setFormData({
         white_player_id: '',

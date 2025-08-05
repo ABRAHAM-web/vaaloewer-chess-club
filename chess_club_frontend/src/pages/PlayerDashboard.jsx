@@ -15,16 +15,14 @@ function PlayerDashboard() {
   const actualId = id || loggedInUser?.id;
 
   function getPerspectiveResult(game, playerUsername) {
-      const isWhite = game.white_player === playerUsername;
-      const result = game.result;
+    const isWhite = game.white_player === playerUsername;
+    const result = game.result;
 
-      if (result === '½-½') return '½-½';
-      if ((result === '1-0' && isWhite) || (result === '0-1' && !isWhite)) return 'Win';
-      if ((result === '0-1' && isWhite) || (result === '1-0' && !isWhite)) return 'Loss';
-  return result; // fallback
+    if (result === '½-½') return '½-½';
+    if ((result === '1-0' && isWhite) || (result === '0-1' && !isWhite)) return 'Win';
+    if ((result === '0-1' && isWhite) || (result === '1-0' && !isWhite)) return 'Loss';
+    return result; // fallback
   }
-
-
 
   useEffect(() => {
     if (!actualId) return;
@@ -43,9 +41,8 @@ function PlayerDashboard() {
     // Fetch games
     axios.get(`http://localhost:3001/players/${actualId}/games`)
       .then((res) => {
-        console.log("📅 Game dates:", res.data.map(g => g.date_played));
         setGames(res.data);
-      })
+      });
   }, [actualId]);
 
   const handleChange = (e) => {
@@ -56,16 +53,21 @@ function PlayerDashboard() {
     }));
   };
 
-  const savePlayer = () => {
-    axios.put(`http://localhost:3001/player/${actualId}`, updatedPlayer)
-      .then((res) => {
-        setPlayer(res.data);
-        setEditing(false);
-      })
-      .catch((err) => {
-        console.error('❌ Update failed:', err);
-        alert('Update failed');
+  const handleUpdateClick = async () => {
+    try {
+      const response = await axios.put(`http://localhost:3001/players/${player.id}`, {
+        email: updatedPlayer.email,
+        avatar: updatedPlayer.avatar,
+        role: updatedPlayer.role,
+        is_available: updatedPlayer.is_available,
       });
+      setPlayer(response.data);
+      setEditing(false);
+      alert('✅ Profile successfully updated!');
+    } catch (err) {
+      console.error('❌ Error updating player:', err);
+      alert('❌ Update failed.');
+    }
   };
 
   if (error) return <div>{error}</div>;
@@ -118,7 +120,10 @@ function PlayerDashboard() {
       {(isAdmin || isSelf) && (
         <div>
           {editing ? (
-            <button onClick={savePlayer}>Save</button>
+            <>
+              <button onClick={handleUpdateClick}>Save</button>
+              <button onClick={() => setEditing(false)}>Cancel</button>
+            </>
           ) : (
             <button onClick={() => setEditing(true)}>Edit</button>
           )}
@@ -130,28 +135,26 @@ function PlayerDashboard() {
         <p>No games found</p>
       ) : (
         <ul>
-        {games.map((game) => {
-          const opponent =
-            game.white_player === player.username
-              ? game.black_player
-              : game.white_player;
+          {games.map((game) => {
+            const opponent =
+              game.white_player === player.username
+                ? game.black_player
+                : game.white_player;
 
-          const formattedDate = game.date_played
-            ? new Date(game.date_played).toLocaleDateString()
-            : 'No Date';
+            const formattedDate = game.date_played
+              ? new Date(game.date_played).toLocaleDateString()
+              : 'No Date';
 
-          return (
-            <li key={game.id}>
-              vs <strong>{opponent}</strong> | Result: {getPerspectiveResult(game, player.username)}| {formattedDate}
-            </li>
-          );
-        })}
-
-
+            return (
+              <li key={game.id}>
+                vs <strong>{opponent}</strong> | Result: {getPerspectiveResult(game, player.username)} | {formattedDate}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
-  );  
+  );
 }
 
 export default PlayerDashboard;

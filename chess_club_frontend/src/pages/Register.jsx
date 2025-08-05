@@ -17,7 +17,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3001/register', formData);
+      await axios.post('http://localhost:3001/auth/register', formData);
       alert('Registered successfully! You can now log in.');
       navigate('/login');
     } catch (err) {

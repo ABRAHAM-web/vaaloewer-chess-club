@@ -86,6 +86,8 @@ router.get('/:id/games', async (req, res) => {
 });
 
 // PUT update player info
+// PUT update existing user
+// PUT update player info
 router.put('/:id', async (req, res) => {
   const { email, avatar, is_available, role } = req.body;
 
@@ -101,10 +103,12 @@ router.put('/:id', async (req, res) => {
     `, [email, avatar || null, is_available ? 1 : 0, role, req.params.id]);
 
     const [updated] = await pool.query("SELECT * FROM users WHERE id = ?", [req.params.id]);
-    res.json(updated[0]);
+    res.json(updated[0]); // ✅ important
   } catch (err) {
     res.status(500).json({ message: 'Failed to update player', error: err.message });
   }
 });
+
+
 
 export default router;
