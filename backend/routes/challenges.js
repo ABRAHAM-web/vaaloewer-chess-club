@@ -2,6 +2,8 @@
 import express from 'express';
 import pool from '../db.js';
 
+
+
 const router = express.Router();
 
 // ✅ Send a challenge to another player
@@ -59,5 +61,8 @@ router.put('/:id/respond', async (req, res) => {
     res.status(500).json({ message: 'Update failed', error: err.message });
   }
 });
+
+
+
 
 export default router;

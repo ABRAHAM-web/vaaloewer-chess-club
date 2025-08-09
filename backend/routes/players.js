@@ -17,6 +17,26 @@ router.get('/', async (req, res) => {
   }
 });
 
+// In backend/routes/players.js
+router.get('/available', async (req, res) => {
+  const currentUserId = Number(req.query.exclude);
+  console.log('Current User ID:', currentUserId);
+
+  try {
+    const [availablePlayers] = await pool.query(
+      'SELECT id, username, avatar FROM users WHERE is_available = 1 AND id != ?',
+      [currentUserId]
+    );
+    res.json(availablePlayers);
+  } catch (err) {
+    console.error('❌ Error fetching available players:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+
+
+
 
 
 // GET player standings

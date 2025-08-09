@@ -31,7 +31,8 @@ function App() {
         <Route path="admin" element={<DashboardAdmin />} />
         <Route path="player/:id" element={<PlayerDashboard />} />
         <Route path="standings" element={<Standings />} />
-        <Route path="challenge" element={<Challenge />} />
+        <Route path="challenge" element={<Challenge user={user} />} />
+
       </Route>
     </Routes>
   );
